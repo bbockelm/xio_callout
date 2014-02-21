@@ -1,0 +1,13 @@
+
+#define XIO_CALLOUT_VERSION_MAJOR @XIO_CALLOUT_VERSION_MAJOR@
+#define XIO_CALLOUT_VERSION_MINOR @XIO_CALLOUT_VERSION_MINOR@
+#define XIO_CALLOUT_TIMESTAMP @XIO_CALLOUT_TIMESTAMP@
+
+globus_version_t local_version =
+{
+    XIO_CALLOUT_VERSION_MAJOR, /* major version number */
+    XIO_CALLOUT_VERSION_MINOR, /* minor/bug version number */
+    XIO_CALLOUT_TIMESTAMP,
+    0 /* branch ID */
+};
+
