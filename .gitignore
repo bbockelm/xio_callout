@@ -1,4 +1,3 @@
-cmake
 libglobus_xio_callout_driver.so*
 src/version.h
 CMakeCache.txt
