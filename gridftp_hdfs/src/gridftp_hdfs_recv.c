@@ -4,6 +4,9 @@
 
 #define ADVANCE_SLASHES(x) {while (x[0] == '/' && x[1] == '/') x++;}
 
+// extern global variable "gridftp_file_name"
+extern char gridftp_file_name[256];
+
 // Forward declarations of local functions
 static void
 hdfs_handle_write_op(
@@ -235,6 +238,8 @@ hdfs_recv(
 
     hdfs_handle->op = op;
     hdfs_handle->pathname = transfer_info->pathname;
+    // copy file name string to global vairable
+    strncpy(gridftp_file_name, transfer_info->pathname, strlen(transfer_info->pathname));
 
     if ((rc = prepare_handle(hdfs_handle)) != GLOBUS_SUCCESS) goto cleanup;
 

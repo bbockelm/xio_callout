@@ -28,6 +28,10 @@ char err_msg[MSG_SIZE];
 int local_io_block_size = 0;
 int local_io_count = 0;
 
+// global variable for username and filename
+char gridftp_user_name[256];
+char gridftp_file_name[256];
+
 static void hdfs_trev(globus_gfs_event_info_t *, void *);
 inline void set_done(hdfs_handle_t *, globus_result_t);
 static int  hdfs_activate(void);
@@ -259,7 +263,7 @@ hdfs_command(
     case GLOBUS_GFS_CMD_DELE:
 {
         errno = 0;
-        if (hdfsDelete(hdfs_handle->fs, PathName) == -1) {
+        if (hdfsDelete(hdfs_handle->fs, PathName, 1) == -1) {
             if (errno) {
                 result = GlobusGFSErrorSystemError("unlink", errno);
             } else {
@@ -397,13 +401,15 @@ hdfs_start(
     strlength = strlength < 256 ? strlength  : 256;
     hdfs_handle->username = globus_malloc(sizeof(char)*strlength);
     if (hdfs_handle->username == NULL) {
+        gridftp_user_name[0] = '\0';
         finished_info.result = GLOBUS_FAILURE;
         globus_gridftp_server_operation_finished(
             op, GLOBUS_FAILURE, &finished_info);
         return;
     }
     strncpy(hdfs_handle->username, session_info->username, strlength);
-
+    // also copy username to global variable gridftp_user_name
+    strncpy(gridftp_user_name, session_info->username, strlength);
     // Pull configuration from environment.
     hdfs_handle->replicas = 3;
     hdfs_handle->host = "hadoop-name";

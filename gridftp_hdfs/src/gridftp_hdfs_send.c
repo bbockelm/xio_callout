@@ -2,6 +2,8 @@
 #include "gridftp_hdfs.h"
 #include <syslog.h>
 
+extern char gridftp_file_name[256]; 
+
 // Forward declarations of local functions
 
 typedef struct hdfs_read_s {
@@ -94,6 +96,8 @@ hdfs_send(
     hdfs_handle = (globus_l_gfs_hdfs_handle_t *) user_arg;
     globus_mutex_lock(hdfs_handle->mutex);
     hdfs_handle->pathname = transfer_info->pathname;
+
+    strncpy(gridftp_file_name, transfer_info->pathname, strlen(transfer_info->pathname));
 
     ADVANCE_SLASHES(hdfs_handle->pathname)
     if (strncmp(hdfs_handle->pathname, hdfs_handle->mount_point, hdfs_handle->mount_point_len)==0) {
