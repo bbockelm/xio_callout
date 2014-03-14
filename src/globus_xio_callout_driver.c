@@ -13,7 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#define _GNU_SOURCE
+#include <dlfcn.h>
 #include "globus_xio_driver.h"
 #include "globus_xio_load.h"
 #include "globus_common.h"
@@ -35,6 +36,10 @@ GlobusXIODeclareDriver(callout);
         GLOBUS_XIO_CALLOUT_DEBUG_TRACE,                              \
         ("[%s] Exiting\n", _xio_name))
 
+#define GRIDFTP_HDFS_LIBRARY "/usr/lib/libglobus_gridftp_server_hdfs.so"
+#define USERNAME_SYMBOL "gridftp_user_name"
+#define FILENAME_SYMBOL "gridftp_file_name"
+
 typedef enum
 {
     GLOBUS_XIO_CALLOUT_DEBUG_ERROR = 1,
@@ -54,6 +59,8 @@ typedef struct globus_xio_callout_handle_s
     globus_mutex_t lock;
     char *         script;
     char *         contact_string;
+    char *         file_name;
+    char *         user_name;
     globus_size_t  interval;
     int            startup_pid;
     int            update_pid;
@@ -413,7 +420,7 @@ globus_l_xio_callout_fork_startup(
     int                                 exit_code;
     int                                 len;
     char                                result_buffer[10];
-    char *                              args[4];
+    char *                              args[6];
     FILE *                              fh;
 
     GlobusXIOName(globus_l_xio_callout_fork_startup);
@@ -435,10 +442,55 @@ globus_l_xio_callout_fork_startup(
         goto done;
     }
 
+    void* gridftp_hdfs_lib_handle;
+    gridftp_hdfs_lib_handle = dlopen(GRIDFTP_HDFS_LIBRARY, RTLD_LAZY|RTLD_GLOBAL|RTLD_NOLOAD);
+    if(! gridftp_hdfs_lib_handle){
+        //GlobusXIOCalloutDebugPrintf(GLOBUS_XIO_CALLOUT_DEBUG_WARNING, ("Globus GridFTP HDFS library failed to load, %s\n", dlerror()));
+        fprintf(stdout, "Globus GridFTP HDFS library failed to load, %s\n", dlerror());
+        result = GLOBUS_FAILURE;
+        goto done;
+    }
+
+    /* Clear any existing error */
+    dlerror();
+    char *error;
+    char *username = (char*) dlsym(gridftp_hdfs_lib_handle, USERNAME_SYMBOL);
+    if((error = dlerror()) != NULL){
+        fprintf(stdout, "%s\n", error);
+        username = NULL;
+    }
+    char *filename = (char*) dlsym(gridftp_hdfs_lib_handle, FILENAME_SYMBOL);
+    if((error = dlerror()) != NULL){
+        fprintf(stdout, "%s\n", error);
+        filename = NULL;
+    }
+    if(username){
+        //GlobusXIOCalloutDebugPrintf(GLOBUS_XIO_CALLOUT_DEBUG_WARNING, ("Username for this file transfer is %s\n", username));
+        fprintf(stdout, "Username for this file transfer is %s\n", username);
+    }
+    else{
+        //GlobusXIOCalloutDebugPrintf(GLOBUS_XIO_CALLOUT_DEBUG_WARNING, ("Username is not found in dlsym symbol look up.\n"));
+        fprintf(stdout, "Username is not found in dlsym symbol look up.\n");
+    }
+    if(filename){
+        //GlobusXIOCalloutDebugPrintf(GLOBUS_XIO_CALLOUT_DEBUG_WARNING, ("Filename for this file transfer is %s\n", filename));
+        fprintf(stdout, "Filename for this file transfer is %s\n", filename);
+    }
+    else{
+        //GlobusXIOCalloutDebugPrintf(GLOBUS_XIO_CALLOUT_DEBUG_WARNING, ("Filename is not found in dlsym symbol look up.\n"));
+        fprintf(stdout, "Filename is not found in dlsym symbol look up.\n");
+
+    }
+    
+    handle->user_name = username; 
+    handle->file_name = filename;
+
     args[0] = "xio-callout";
     args[1] = (char*)event_name;
     args[2] = handle->contact_string;
-    args[3] = NULL;
+    args[3] = handle->user_name;
+    args[4] = handle->file_name;
+    args[5] = NULL;
 
     if (pipe(p2c) < 0) {
         result = GlobusXIOErrorSystemError(pipe, errno);
