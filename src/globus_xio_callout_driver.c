@@ -39,6 +39,7 @@ GlobusXIODeclareDriver(callout);
 #define GRIDFTP_HDFS_LIBRARY "/usr/lib/libglobus_gridftp_server_hdfs.so"
 #define USERNAME_SYMBOL "gridftp_user_name"
 #define FILENAME_SYMBOL "gridftp_file_name"
+#define EVENT_TYPE_SYMBOL "gridftp_transfer_type"
 
 typedef enum
 {
@@ -61,6 +62,7 @@ typedef struct globus_xio_callout_handle_s
     char *         contact_string;
     char *         file_name;
     char *         user_name;
+    char *         transfer_type;
     globus_size_t  interval;
     int            startup_pid;
     int            update_pid;
@@ -464,6 +466,11 @@ globus_l_xio_callout_fork_startup(
         fprintf(stdout, "%s\n", error);
         filename = NULL;
     }
+    char *transfer_type = (char*) dlsym(gridftp_hdfs_lib_handle, EVENT_TYPE_SYMBOL);
+    if((error = dlerror()) != NULL){
+        fprintf(stdout, "%s\n", error);
+        transfer_type = NULL;
+    }
     if(username){
         //GlobusXIOCalloutDebugPrintf(GLOBUS_XIO_CALLOUT_DEBUG_WARNING, ("Username for this file transfer is %s\n", username));
         fprintf(stdout, "Username for this file transfer is %s\n", username);
@@ -481,16 +488,24 @@ globus_l_xio_callout_fork_startup(
         fprintf(stdout, "Filename is not found in dlsym symbol look up.\n");
 
     }
+    if(transfer_type){
+        fprintf(stdout, "Event type for this file transfer is %s\n", transfer_type);
+    }
+    else{
+        fprintf(stdout, "Event type is not found in dlsym symbol look up.\n");
+    }
     
     handle->user_name = username; 
     handle->file_name = filename;
+    handle->transfer_type = transfer_type;
 
     args[0] = "xio-callout";
     args[1] = (char*)event_name;
     args[2] = handle->contact_string;
     args[3] = handle->user_name;
     args[4] = handle->file_name;
-    args[5] = NULL;
+    args[5] = handle->transfer_type;
+    args[6] = NULL;
 
     if (pipe(p2c) < 0) {
         result = GlobusXIOErrorSystemError(pipe, errno);

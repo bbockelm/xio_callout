@@ -6,6 +6,7 @@
 
 // extern global variable "gridftp_file_name"
 extern char gridftp_file_name[256];
+extern char gridftp_transfer_type[10];
 
 // Forward declarations of local functions
 static void
@@ -240,6 +241,7 @@ hdfs_recv(
     hdfs_handle->pathname = transfer_info->pathname;
     // copy file name string to global vairable
     strncpy(gridftp_file_name, transfer_info->pathname, strlen(transfer_info->pathname));
+    strcpy(gridftp_transfer_type, "upload");
 
     if ((rc = prepare_handle(hdfs_handle)) != GLOBUS_SUCCESS) goto cleanup;
 

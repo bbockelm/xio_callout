@@ -28,9 +28,10 @@ char err_msg[MSG_SIZE];
 int local_io_block_size = 0;
 int local_io_count = 0;
 
-// global variable for username and filename
+// global variable for username, filename and event type
 char gridftp_user_name[256];
 char gridftp_file_name[256];
+char gridftp_transfer_type[10];
 
 static void hdfs_trev(globus_gfs_event_info_t *, void *);
 inline void set_done(hdfs_handle_t *, globus_result_t);
