@@ -3,6 +3,7 @@
 #include <syslog.h>
 
 extern char gridftp_file_name[256]; 
+extern char gridftp_transfer_type[10];
 
 // Forward declarations of local functions
 
@@ -98,6 +99,7 @@ hdfs_send(
     hdfs_handle->pathname = transfer_info->pathname;
 
     strncpy(gridftp_file_name, transfer_info->pathname, strlen(transfer_info->pathname));
+    strcpy(gridftp_transfer_type, "download");
 
     ADVANCE_SLASHES(hdfs_handle->pathname)
     if (strncmp(hdfs_handle->pathname, hdfs_handle->mount_point, hdfs_handle->mount_point_len)==0) {
