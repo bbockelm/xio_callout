@@ -1,7 +1,0 @@
-#!/bin/sh
-
-ln -sf /usr/share/libtool/ltmain.sh
-aclocal
-automake -a -c -f
-autoconf
-
